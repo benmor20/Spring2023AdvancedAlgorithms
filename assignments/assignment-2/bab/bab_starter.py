@@ -123,7 +123,24 @@ class BBTreeNode():
         # initialize bestnode_vars to the root vars
         bestnode_vars = root.vars
 
-        #TODO:
-        # Implement your solution here!
+        while len(heap) > 0:
+            _, _, node = heappop(heap)
+            try:
+                curres = node.prob.solve(solver='cvxopt')
+            except:
+                pass
+
+            if curres.value < bestres:
+                continue
+            elif node.is_integral():
+                bestres = float(node.vars[-1])
+                bestnode_vars = [val.value for val in node.vars]
+            else:
+                branch_var = next(v for v in node.vars if v.value != None and abs(round(v) - float(v)) > 1e-4)
+                floor_node = node.branch_floor(branch_var)
+                ceil_node = node.branch_ceil(branch_var)
+                heappush(heap, (float(bestres), next(counter), floor_node))
+                heappush(heap, (float(bestres), next(counter), ceil_node))
+                
 
         return bestres, bestnode_vars
